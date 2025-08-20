@@ -35,14 +35,24 @@ fun MovieItem(
         Row(
             modifier = Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically
         ) {
-            movie.poster_path?.let { posterPath ->
+            Column() {
+                movie.poster_path?.let { posterPath ->
+                    Image(
+                        painter = rememberImagePainter("https://image.tmdb.org/t/p/w185$posterPath"),
+                        contentDescription = "Poster",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .width(100.dp)
+                            .height(150.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
                 Image(
-                    painter = rememberImagePainter("https://image.tmdb.org/t/p/w185$posterPath"),
-                    contentDescription = "Poster",
-                    contentScale = ContentScale.Crop,
+                    painter = painterResource(id = R.drawable.tmdb),
+                    contentDescription = "TMDB Logo",
                     modifier = Modifier
+                        .height(50.dp)
                         .width(100.dp)
-                        .height(150.dp)
                 )
             }
 
@@ -96,17 +106,7 @@ fun MovieItem(
                 movie.runtime?.let {
                     Text("Duração: $it min")
                 } ?: Text("Duração não disponível")
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Image(
-                        painter = painterResource(id = R.drawable.tmdb),
-                        contentDescription = "TMDB Logo",
-                        modifier = Modifier.height(50.dp)
-                    )
-                }
+
             }
 
         }

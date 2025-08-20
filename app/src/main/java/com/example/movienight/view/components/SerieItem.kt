@@ -34,14 +34,24 @@ fun SeriesItem(
         Row(
             modifier = Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically
         ) {
-            series.poster_path?.let { posterPath ->
+            Column() {
+                series.poster_path?.let { posterPath ->
+                    Image(
+                        painter = rememberImagePainter("https://image.tmdb.org/t/p/w185$posterPath"),
+                        contentDescription = "Poster da série",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .width(100.dp)
+                            .height(150.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
                 Image(
-                    painter = rememberImagePainter("https://image.tmdb.org/t/p/w185$posterPath"),
-                    contentDescription = "Poster da série",
-                    contentScale = ContentScale.Crop,
+                    painter = painterResource(id = R.drawable.tmdb),
+                    contentDescription = "TMDB Logo",
                     modifier = Modifier
+                        .height(50.dp)
                         .width(100.dp)
-                        .height(150.dp)
                 )
             }
 
@@ -92,17 +102,7 @@ fun SeriesItem(
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(text = "Temporadas: ${series.numberOfSeasons ?: "Desconhecido"}")
 
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Image(
-                        painter = painterResource(id = R.drawable.tmdb),
-                        contentDescription = "TMDB Logo",
-                        modifier = Modifier.height(50.dp)
-                    )
-                }
+
             }
         }
     }
