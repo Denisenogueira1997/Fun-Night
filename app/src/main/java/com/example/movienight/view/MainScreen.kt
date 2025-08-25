@@ -69,7 +69,7 @@ fun MainScreen(
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary
                 ),
-                modifier = Modifier.statusBarsPadding()
+                modifier = Modifier.fillMaxWidth()
 
             )
 
@@ -82,7 +82,8 @@ fun MainScreen(
                 .padding(paddingValues)
                 .verticalScroll(scrollState)
                 .background(MaterialTheme.colorScheme.onBackground)
-                .windowInsetsPadding(WindowInsets.navigationBars),
+                .windowInsetsPadding(WindowInsets.navigationBars)
+                .statusBarsPadding(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
