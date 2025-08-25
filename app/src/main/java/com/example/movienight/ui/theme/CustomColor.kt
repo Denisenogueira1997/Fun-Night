@@ -1,35 +1,42 @@
 package com.example.movienight.ui.theme
 
-import android.annotation.SuppressLint
+
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
+import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import com.google.android.material.color.utilities.CorePalette
 
-private val userBaseColor = 0xFF263583.toInt()
+private val userBaseColor = Color(0xFF263583)
 
-@SuppressLint("RestrictedApi")
 @Composable
 fun CustomColor(content: @Composable () -> Unit) {
-    val palette = CorePalette.of(userBaseColor)
-
-
-    val colorScheme = lightColorScheme(
-        primary = Color(palette.a1.tone(40)),
-        onPrimary = Color(palette.a1.tone(100)),
-        secondary = Color(palette.a2.tone(40)),
-        onSecondary = Color(palette.a2.tone(100)),
-        background = Color(palette.n1.tone(99)),
-        onBackground = Color(palette.n1.tone(10)),
-        surface = Color(palette.n1.tone(98)),
-        onSurface = Color(palette.n1.tone(10))
+    val darkTheme = isSystemInDarkTheme()
+    val colorScheme = if (darkTheme) darkColorScheme(
+        primary = userBaseColor,
+        onPrimary = Color.White,
+        secondary = userBaseColor.copy(alpha = 0.8f),
+        onSecondary = Color.White,
+        background = Color(0xFF121212),
+        onBackground = Color.White,
+        surface = Color(0xFF1E1E1E),
+        onSurface = Color.White
+    ) else lightColorScheme(
+        primary = userBaseColor,
+        onPrimary = Color.White,
+        secondary = userBaseColor.copy(alpha = 0.8f),
+        onSecondary = Color.White,
+        background = Color(0xFFFFFFFF),
+        onBackground = Color.Black,
+        surface = Color(0xFFF5F5F5),
+        onSurface = Color.Black
     )
 
     MaterialTheme(
-        colorScheme = colorScheme, typography = Typography(), content = content
+        colorScheme = colorScheme,
+        typography = Typography(),
+        content = content
     )
-
-
 }

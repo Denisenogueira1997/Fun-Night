@@ -1,15 +1,17 @@
 package com.example.movienight.view
 
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -65,21 +67,22 @@ fun MainScreen(
             CenterAlignedTopAppBar(
                 title = { Text("Tela Inicial", color = MaterialTheme.colorScheme.onPrimary) },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary.copy(0.9f)
+                    containerColor = MaterialTheme.colorScheme.primary
                 ),
                 modifier = Modifier.statusBarsPadding()
 
             )
 
-        }, modifier = Modifier.fillMaxSize(),
-        contentWindowInsets = WindowInsets.systemBars
+        }, modifier = Modifier.fillMaxSize(), contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { paddingValues ->
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .verticalScroll(scrollState),
+                .verticalScroll(scrollState)
+                .background(MaterialTheme.colorScheme.onBackground)
+                .windowInsetsPadding(WindowInsets.navigationBars),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
@@ -95,7 +98,7 @@ fun MainScreen(
                 modifier = Modifier.fillMaxWidth(),
 
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary.copy(0.7f)
+                    containerColor = MaterialTheme.colorScheme.secondary
                 )
 
 
@@ -111,10 +114,8 @@ fun MainScreen(
                     movieViewModel.clearMovie()
                     animeViewModel.clearAnime()
                     seriesViewModel.fetchSeries()
-                },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary.copy(0.7f)
+                }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.secondary
                 )
             ) {
                 Text("📺 Sortear Série")
@@ -128,10 +129,8 @@ fun MainScreen(
                     movieViewModel.clearMovie()
                     seriesViewModel.clearSeries()
                     animeViewModel.fetchAnime()
-                },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary.copy(0.7f)
+                }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.secondary
                 )
             ) {
                 Text("🎌 Sortear Anime ou Desenho")
@@ -144,10 +143,8 @@ fun MainScreen(
                     seriesViewModel.clearSeries()
                     animeViewModel.clearAnime()
                     movieViewModel.fetchMoviesWithStreaming()
-                },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary.copy(0.7f)
+                }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.secondary
                 )
             ) {
                 Text("🎬 Sortear Filme com Streaming")

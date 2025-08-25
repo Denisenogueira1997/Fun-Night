@@ -73,8 +73,7 @@ class MovieViewModel : ViewModel() {
 
                 val allResults = responses.flatMap { res ->
                     res.results.filter { m ->
-                        m.genre_ids?.none { it == 27 } == true &&
-                                isTitleLatin(m.title)
+                        m.genre_ids?.none { it == 27 } == true && isTitleLatin(m.title)
                     }
                 }
 
@@ -90,11 +89,8 @@ class MovieViewModel : ViewModel() {
 
                     val releaseDates =
                         RetrofitInstance.api.getMovieReleaseDates(randomMovie.id, apiKey)
-                    val brCert = releaseDates.results
-                        .find { it.iso_3166_1 == "BR" }
-                        ?.release_dates
-                        ?.firstOrNull()
-                        ?.certification
+                    val brCert =
+                        releaseDates.results.find { it.iso_3166_1 == "BR" }?.release_dates?.firstOrNull()?.certification
 
                     if (!brCert.isNullOrEmpty() && brCert.toIntOrNull() != null && brCert.toInt() > 16) {
                         _ageWarning.value = "Filme indicado para maiores de $brCert anos."
@@ -108,6 +104,7 @@ class MovieViewModel : ViewModel() {
             }
         }
     }
+
     fun fetchMoviesWithStreaming(pagesToSearch: Int = 5) {
         viewModelScope.launch {
             _selectedMovie.value = null
@@ -130,8 +127,7 @@ class MovieViewModel : ViewModel() {
 
                 val allResults = responses.flatMap { res ->
                     res.results.filter { m ->
-                        m.genre_ids?.none { it == 27 } == true &&
-                                isTitleLatin(m.title)
+                        m.genre_ids?.none { it == 27 } == true && isTitleLatin(m.title)
                     }
                 }
 
@@ -157,13 +153,9 @@ class MovieViewModel : ViewModel() {
                 movieWithStreaming?.let { movie ->
                     _selectedMovie.value = movie
 
-                    val releaseDates =
-                        RetrofitInstance.api.getMovieReleaseDates(movie.id, apiKey)
-                    val brCert = releaseDates.results
-                        .find { it.iso_3166_1 == "BR" }
-                        ?.release_dates
-                        ?.firstOrNull()
-                        ?.certification
+                    val releaseDates = RetrofitInstance.api.getMovieReleaseDates(movie.id, apiKey)
+                    val brCert =
+                        releaseDates.results.find { it.iso_3166_1 == "BR" }?.release_dates?.firstOrNull()?.certification
 
                     if (!brCert.isNullOrEmpty() && brCert.toIntOrNull() != null && brCert.toInt() > 16) {
                         _ageWarning.value = "Filme indicado para maiores de $brCert anos."
@@ -201,8 +193,7 @@ class MovieViewModel : ViewModel() {
 
                 val allResults = responses.flatMap { res ->
                     res.results.filter { m ->
-                        m.genre_ids?.none { it == 18 || it == 27 } == true &&
-                                isTitleLatin(m.title)
+                        m.genre_ids?.none { it == 18 || it == 27 } == true && isTitleLatin(m.title)
                     }
                 }
 
@@ -215,7 +206,8 @@ class MovieViewModel : ViewModel() {
                     br?.rent?.forEach { allProviders.add(it.copy(type = "rent")) }
                     br?.buy?.forEach { allProviders.add(it.copy(type = "buy")) }
 
-                    val hasSelectedProvider = allProviders.any { it.provider_id in selectedProviderIds }
+                    val hasSelectedProvider =
+                        allProviders.any { it.provider_id in selectedProviderIds }
 
                     if (hasSelectedProvider) {
                         val details = RetrofitInstance.api.getMovieDetails(movie.id, apiKey)
@@ -230,13 +222,9 @@ class MovieViewModel : ViewModel() {
                 filteredMovie?.let { movie ->
                     _selectedMovie.value = movie
 
-                    val releaseDates =
-                        RetrofitInstance.api.getMovieReleaseDates(movie.id, apiKey)
-                    val brCert = releaseDates.results
-                        .find { it.iso_3166_1 == "BR" }
-                        ?.release_dates
-                        ?.firstOrNull()
-                        ?.certification
+                    val releaseDates = RetrofitInstance.api.getMovieReleaseDates(movie.id, apiKey)
+                    val brCert =
+                        releaseDates.results.find { it.iso_3166_1 == "BR" }?.release_dates?.firstOrNull()?.certification
 
                     if (!brCert.isNullOrEmpty() && brCert.toIntOrNull() != null && brCert.toInt() > 16) {
                         _ageWarning.value = "Filme indicado para maiores de $brCert anos."
@@ -251,7 +239,6 @@ class MovieViewModel : ViewModel() {
             }
         }
     }
-
 
 
     private fun fetchWatchProviders(movieId: Int) {

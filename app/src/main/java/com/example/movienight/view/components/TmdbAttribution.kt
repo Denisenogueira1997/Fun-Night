@@ -49,7 +49,7 @@ fun TmdbAttribution() {
                 fontStyle = FontStyle.Italic,
                 fontWeight = FontWeight.Bold,
                 fontSize = 10.sp,
-                color = MaterialTheme.colorScheme.onBackground,
+                color = MaterialTheme.colorScheme.background,
                 modifier = Modifier.padding(horizontal = 16.dp)
             )
         }

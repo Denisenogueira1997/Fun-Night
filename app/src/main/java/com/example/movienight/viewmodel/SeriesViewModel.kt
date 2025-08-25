@@ -68,8 +68,7 @@ class SeriesViewModel : ViewModel() {
 
                 val allResults = responses.flatMap { res ->
                     res.results.filter { s ->
-                        s.genre_ids?.none {  it == 16 } == true &&
-                                isTitleLatin(s.name)
+                        s.genre_ids?.none { it == 16 } == true && isTitleLatin(s.name)
                     }
                 }
 
@@ -87,8 +86,7 @@ class SeriesViewModel : ViewModel() {
                         original_language = details.originalLanguage,
                         overview = details.overview,
                         genre_ids = details.genres?.map { it.id } ?: emptyList(),
-                        numberOfSeasons = details.numberOfSeasons
-                    )
+                        numberOfSeasons = details.numberOfSeasons)
 
                     fetchWatchProviders(randomSeries.id)
 

@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -25,7 +26,7 @@ fun WarningCard(warning: String) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFE0E0)),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.onPrimary),
         shape = RoundedCornerShape(12.dp)
     ) {
         Row(
