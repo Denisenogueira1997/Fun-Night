@@ -24,20 +24,14 @@ class MovieViewModel : ViewModel() {
     private val _ageWarning = MutableStateFlow<String?>(null)
     val ageWarning: StateFlow<String?> = _ageWarning
 
-
-    private fun isTitleLatin(text: String?): Boolean {
-        return !text.isNullOrBlank() && text.any { it.isLetter() && it.code < 256 }
-    }
-
     private val _genres = MutableStateFlow<Map<Int, String>>(emptyMap())
     val genres: StateFlow<Map<Int, String>> = _genres
 
-    private val _availableProviders = MutableStateFlow<List<Provider>>(emptyList())
-    val availableProviders: StateFlow<List<Provider>> = _availableProviders
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading
 
     init {
         fetchGenres()
-
     }
 
     private fun fetchGenres() {
@@ -51,195 +45,154 @@ class MovieViewModel : ViewModel() {
         }
     }
 
-    fun fetchMovies(pagesToSearch: Int = 5) {
-        viewModelScope.launch {
-            _selectedMovie.value = null
-            _ageWarning.value = null
-
-            try {
-                val pages = (1..500).shuffled().take(pagesToSearch)
-                val responses = pages.map { page ->
-                    async {
-                        RetrofitInstance.api.discoverMovies(
-                            apiKey = apiKey,
-                            language = "pt-BR",
-                            page = page,
-                            voteCount = 30,
-                            minVote = 7f,
-                            withoutGenres = null
-                        )
-                    }
-                }.awaitAll()
-
-                val allResults = responses.flatMap { res ->
-                    res.results.filter { m ->
-                        m.genre_ids?.none { it == 27 } == true && isTitleLatin(m.title)
-                    }
-                }
-
-                if (allResults.isNotEmpty()) {
-                    val randomMovie = allResults.random()
-
-                    val details = RetrofitInstance.api.getMovieDetails(randomMovie.id, apiKey)
-                    val movieWithRuntime = randomMovie.copy(runtime = details.runtime)
-                    _selectedMovie.value = movieWithRuntime
-
-                    fetchWatchProviders(movieWithRuntime.id)
-
-
-                    val releaseDates =
-                        RetrofitInstance.api.getMovieReleaseDates(randomMovie.id, apiKey)
-                    val brCert =
-                        releaseDates.results.find { it.iso_3166_1 == "BR" }?.release_dates?.firstOrNull()?.certification
-
-                    if (!brCert.isNullOrEmpty() && brCert.toIntOrNull() != null && brCert.toInt() > 16) {
-                        _ageWarning.value = "Filme indicado para maiores de $brCert anos."
-                    } else {
-                        _ageWarning.value = null
-                    }
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                _ageWarning.value = null
-            }
-        }
+    private fun isTitleLatin(text: String?): Boolean {
+        return !text.isNullOrBlank() && text.any { it.isLetter() && it.code < 256 }
     }
 
-    fun fetchMoviesWithStreaming(pagesToSearch: Int = 5) {
+    fun fetchMovies(
+        pagesToSearch: Int = 5,
+        k: Float = 30f,
+        minWeightedScore: Float = 7f,
+        minVoteCount: Int = 10,
+        maxAttempts: Int = 2
+    ) {
         viewModelScope.launch {
             _selectedMovie.value = null
             _ageWarning.value = null
+            _streamingMap.value = emptyMap()
+            _isLoading.value = true
 
-            try {
-                val pages = (1..500).shuffled().take(pagesToSearch)
-                val responses = pages.map { page ->
-                    async {
-                        RetrofitInstance.api.discoverMovies(
-                            apiKey = apiKey,
-                            language = "pt-BR",
-                            page = page,
-                            voteCount = 30,
-                            minVote = 7f,
-                            withoutGenres = "27"
-                        )
-                    }
-                }.awaitAll()
+            var movieFound: Movie? = null
+            var attempt = 0
 
-                val allResults = responses.flatMap { res ->
-                    res.results.filter { m ->
-                        m.genre_ids?.none { it == 27 } == true && isTitleLatin(m.title)
-                    }
-                }
+            while (movieFound == null && attempt < maxAttempts) {
+                attempt++
 
-                val movieWithStreaming = allResults.shuffled().firstNotNullOfOrNull { movie ->
-                    val providersResponse = RetrofitInstance.api.getWatchProviders(movie.id, apiKey)
-                    val br = providersResponse.results["BR"]
+                try {
+                    val pages = (1..500).shuffled().take(pagesToSearch)
+                    val responses = pages.map { page ->
+                        async {
+                            RetrofitInstance.api.discoverMovies(
+                                apiKey = apiKey,
+                                language = "pt-BR",
+                                page = page,
+                                voteCount = minVoteCount,
+                                minVote = 0f,
+                                withoutGenres = null
+                            )
+                        }
+                    }.awaitAll()
 
-                    val allProviders = mutableListOf<Provider>()
-                    br?.flatrate?.forEach { allProviders.add(it.copy(type = "flatrate")) }
-                    br?.rent?.forEach { allProviders.add(it.copy(type = "rent")) }
-                    br?.buy?.forEach { allProviders.add(it.copy(type = "buy")) }
+                    val allResults = responses.flatMap { res ->
+                        res.results.filter { m ->
+                            val weightedScore =
+                                (m.voteAverage * m.voteCount + 7f * k) / (m.voteCount + k)
+                            weightedScore >= minWeightedScore && isTitleLatin(m.title) && m.genre_ids?.none { it == 27 } == true
+                        }
+                    }.shuffled()
 
-                    return@firstNotNullOfOrNull if (allProviders.isNotEmpty()) {
-                        val details = RetrofitInstance.api.getMovieDetails(movie.id, apiKey)
-                        val movieWithRuntime = movie.copy(runtime = details.runtime)
-                        _streamingMap.value = mapOf(movie.id to allProviders)
+                    movieFound = allResults.firstOrNull()?.let { randomMovie ->
+                        val details = RetrofitInstance.api.getMovieDetails(randomMovie.id, apiKey)
+                        val movieWithRuntime = randomMovie.copy(runtime = details.runtime)
+                        fetchWatchProviders(movieWithRuntime.id)
                         movieWithRuntime
-                    } else {
-                        null
                     }
+
+                    _selectedMovie.value = movieFound
+
+                } catch (e: Exception) {
+                    e.printStackTrace()
                 }
-
-                movieWithStreaming?.let { movie ->
-                    _selectedMovie.value = movie
-
-                    val releaseDates = RetrofitInstance.api.getMovieReleaseDates(movie.id, apiKey)
-                    val brCert =
-                        releaseDates.results.find { it.iso_3166_1 == "BR" }?.release_dates?.firstOrNull()?.certification
-
-                    if (!brCert.isNullOrEmpty() && brCert.toIntOrNull() != null && brCert.toInt() > 16) {
-                        _ageWarning.value = "Filme indicado para maiores de $brCert anos."
-                    } else {
-                        _ageWarning.value = null
-                    }
-                }
-
-            } catch (e: Exception) {
-                e.printStackTrace()
-                _ageWarning.value = null
             }
+
+            _isLoading.value = false
         }
     }
 
-    fun fetchMoviesWithSelectedStreaming(selectedProviderIds: List<Int>, pagesToSearch: Int = 5) {
+    fun fetchMoviesWithSelectedStreaming(
+        selectedProviderIds: List<Int> = listOf(119, 13, 49, 118, 137),
+        pagesToSearch: Int = 5,
+        k: Float = 30f,
+        minWeightedScore: Float = 7f,
+        maxAttempts: Int = 2
+    ) {
         viewModelScope.launch {
+            _isLoading.value = true
             _selectedMovie.value = null
             _ageWarning.value = null
+            _streamingMap.value = emptyMap()
 
-            try {
-                val pages = (1..500).shuffled().take(pagesToSearch)
-                val responses = pages.map { page ->
-                    async {
-                        RetrofitInstance.api.discoverMovies(
-                            apiKey = apiKey,
-                            language = "pt-BR",
-                            page = page,
-                            voteCount = 30,
-                            minVote = 7f,
-                            withoutGenres = "18,27"
-                        )
-                    }
-                }.awaitAll()
+            var movieFound: Movie? = null
+            var attempt = 0
 
-                val allResults = responses.flatMap { res ->
-                    res.results.filter { m ->
-                        m.genre_ids?.none { it == 18 || it == 27 } == true && isTitleLatin(m.title)
-                    }
-                }
+            while (movieFound == null && attempt < maxAttempts) {
+                attempt++
 
-                val filteredMovie = allResults.shuffled().firstNotNullOfOrNull { movie ->
-                    val providersResponse = RetrofitInstance.api.getWatchProviders(movie.id, apiKey)
-                    val br = providersResponse.results["BR"]
+                try {
+                    val pages = (1..500).shuffled().take(pagesToSearch)
+                    val responses = pages.map { page ->
+                        async {
+                            RetrofitInstance.api.discoverMovies(
+                                apiKey = apiKey,
+                                language = "pt-BR",
+                                page = page,
+                                voteCount = 1,
+                                minVote = 0f,
+                                sortBy = "popularity.desc",
+                                withoutGenres = "27"
+                            )
+                        }
+                    }.awaitAll()
 
-                    val allProviders = mutableListOf<Provider>()
-                    br?.flatrate?.forEach { allProviders.add(it.copy(type = "flatrate")) }
-                    br?.rent?.forEach { allProviders.add(it.copy(type = "rent")) }
-                    br?.buy?.forEach { allProviders.add(it.copy(type = "buy")) }
+                    val allResults = responses.flatMap { res ->
+                        res.results.filter { movie ->
+                            val weightedScore =
+                                (movie.voteAverage * movie.voteCount + 7f * k) / (movie.voteCount + k)
+                            weightedScore >= minWeightedScore && isTitleLatin(movie.title)
+                        }
+                    }.shuffled()
 
-                    val hasSelectedProvider =
-                        allProviders.any { it.provider_id in selectedProviderIds }
-
-                    if (hasSelectedProvider) {
+                    for (movie in allResults) {
                         val details = RetrofitInstance.api.getMovieDetails(movie.id, apiKey)
-                        val movieWithRuntime = movie.copy(runtime = details.runtime)
-                        _streamingMap.value = mapOf(movie.id to allProviders)
-                        movieWithRuntime
-                    } else {
-                        null
+                        val providersResponse =
+                            RetrofitInstance.api.getWatchProviders(movie.id, apiKey)
+
+                        val br = providersResponse.results["BR"]
+                        val allProviders = mutableListOf<Provider>()
+                        br?.flatrate?.forEach { allProviders.add(it.copy(type = "flatrate")) }
+                        br?.rent?.forEach { allProviders.add(it.copy(type = "rent")) }
+                        br?.buy?.forEach { allProviders.add(it.copy(type = "buy")) }
+
+                        if (allProviders.any { it.provider_id in selectedProviderIds }) {
+                            val movieWithRuntime = movie.copy(runtime = details.runtime)
+                            _selectedMovie.value = movieWithRuntime
+                            _streamingMap.value = mapOf(movie.id to allProviders)
+
+                            val brCert = RetrofitInstance.api.getMovieReleaseDates(
+                                movie.id,
+                                apiKey
+                            ).results.find { it.iso_3166_1 == "BR" }?.release_dates?.firstOrNull()?.certification
+
+                            _ageWarning.value = when {
+                                brCert.isNullOrEmpty() -> null
+                                brCert.toIntOrNull() != null && brCert.toInt() > 16 -> "Filme indicado para maiores de $brCert anos."
+                                else -> "Classificação: $brCert"
+                            }
+
+                            movieFound = movieWithRuntime
+                            break
+                        }
                     }
+
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    _ageWarning.value = null
                 }
-
-                filteredMovie?.let { movie ->
-                    _selectedMovie.value = movie
-
-                    val releaseDates = RetrofitInstance.api.getMovieReleaseDates(movie.id, apiKey)
-                    val brCert =
-                        releaseDates.results.find { it.iso_3166_1 == "BR" }?.release_dates?.firstOrNull()?.certification
-
-                    if (!brCert.isNullOrEmpty() && brCert.toIntOrNull() != null && brCert.toInt() > 16) {
-                        _ageWarning.value = "Filme indicado para maiores de $brCert anos."
-                    } else {
-                        _ageWarning.value = null
-                    }
-                }
-
-            } catch (e: Exception) {
-                e.printStackTrace()
-                _ageWarning.value = null
             }
+
+            _isLoading.value = false
         }
     }
-
 
     private fun fetchWatchProviders(movieId: Int) {
         viewModelScope.launch {
@@ -252,9 +205,17 @@ class MovieViewModel : ViewModel() {
                 br?.rent?.forEach { all.add(it.copy(type = "rent")) }
                 br?.buy?.forEach { all.add(it.copy(type = "buy")) }
 
-                _streamingMap.value = _streamingMap.value + (movieId to all)
+                _streamingMap.value =
+                    _streamingMap.value + (movieId to (all.ifEmpty { emptyList() }))
+            } catch (e: retrofit2.HttpException) {
+                if (e.code() == 404) {
+                    _streamingMap.value = _streamingMap.value + (movieId to emptyList())
+                } else {
+                    e.printStackTrace()
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
+                _streamingMap.value = _streamingMap.value + (movieId to emptyList())
             }
         }
     }
@@ -264,5 +225,4 @@ class MovieViewModel : ViewModel() {
         _ageWarning.value = null
         _streamingMap.value = emptyMap()
     }
-
 }

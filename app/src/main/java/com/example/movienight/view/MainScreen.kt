@@ -2,21 +2,26 @@ package com.example.movienight.view
 
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -51,14 +56,17 @@ fun MainScreen(
     val movie by movieViewModel.selectedMovie.collectAsState()
     val movieProviders by movieViewModel.streamingMap.collectAsState()
     val movieAgeWarning by movieViewModel.ageWarning.collectAsState()
+    val isLoading by movieViewModel.isLoading.collectAsState()
 
     val series by seriesViewModel.selectedSeries.collectAsState()
     val seriesProviders by seriesViewModel.streamingMap.collectAsState()
-    val seriesAgeWarning by seriesViewModel.ageWarning.collectAsState()
+    val isLoadingSeries by seriesViewModel.isLoading.collectAsState()
 
     val anime by animeViewModel.selectedAnime.collectAsState()
+    val isLoadingAnime by animeViewModel.isLoading.collectAsState()
     val animeProviders by animeViewModel.streamingMap.collectAsState()
 
+    val isLoadingAny = isLoading || isLoadingSeries || isLoadingAnime
 
     val scrollState = rememberScrollState()
 
@@ -70,115 +78,119 @@ fun MainScreen(
                     containerColor = MaterialTheme.colorScheme.primary
                 ),
                 modifier = Modifier.fillMaxWidth()
-
             )
+        },
+        modifier = Modifier
+            .fillMaxSize()
+            .windowInsetsPadding(WindowInsets.systemBars)
+            .consumeWindowInsets(WindowInsets.systemBars),
+    ) { innerPadding ->
 
-        }, modifier = Modifier.fillMaxSize(), contentWindowInsets = WindowInsets(0, 0, 0, 0)
-    ) { paddingValues ->
+        Box(modifier = Modifier.fillMaxSize()) {
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .verticalScroll(scrollState)
-                .background(MaterialTheme.colorScheme.onBackground)
-                .windowInsetsPadding(WindowInsets.navigationBars)
-                .statusBarsPadding(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Button(
-                onClick = {
-                    seriesViewModel.clearSeries()
-                    animeViewModel.clearAnime()
-                    movieViewModel.fetchMovies()
-                },
-
-                modifier = Modifier.fillMaxWidth(),
-
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.secondary
-                )
-
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .verticalScroll(scrollState)
+                    .background(MaterialTheme.colorScheme.onBackground)
+                    .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)),
+                horizontalAlignment = Alignment.CenterHorizontally
 
             ) {
-                Text("🎬 Sortear Filme")
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Button(
+                    onClick = {
+                        seriesViewModel.clearSeries()
+                        animeViewModel.clearAnime()
+                        movieViewModel.fetchMovies()
+                    }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondary
+                    )
+                ) {
+                    Text("🎬 Sortear Filme")
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Button(
+                    onClick = {
+                        movieViewModel.clearMovie()
+                        animeViewModel.clearAnime()
+                        seriesViewModel.fetchSeries()
+                    }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondary
+                    )
+                ) {
+                    Text("📺 Sortear Série")
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Button(
+                    onClick = {
+                        movieViewModel.clearMovie()
+                        seriesViewModel.clearSeries()
+                        animeViewModel.fetchAnime()
+                    }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondary
+                    )
+                ) {
+                    Text("🎌 Sortear Anime ou Desenho")
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Button(
+                    onClick = {
+                        seriesViewModel.clearSeries()
+                        animeViewModel.clearAnime()
+                        movieViewModel.fetchMoviesWithSelectedStreaming()
+                    }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondary
+                    )
+                ) {
+                    Text("🎬 Sortear Filme com Streaming")
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                movieAgeWarning?.let { WarningCard(it) }
+
+                movie?.let {
+                    MovieItem(
+                        movie = it, providers = movieProviders[it.id], genreMap = movieGenres
+                    )
+                }
+
+                series?.let {
+                    SeriesItem(
+                        series = it, providers = seriesProviders[it.id], genreMap = seriesGenres
+                    )
+                }
+
+                anime?.let {
+                    SeriesItem(
+                        series = it, providers = animeProviders[it.id], genreMap = seriesGenres
+                    )
+                }
+
+                Spacer(modifier = Modifier.weight(1f))
+                TmdbAttribution()
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-
-            Button(
-                onClick = {
-                    movieViewModel.clearMovie()
-                    animeViewModel.clearAnime()
-                    seriesViewModel.fetchSeries()
-                }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.secondary
-                )
-            ) {
-                Text("📺 Sortear Série")
+            if (isLoadingAny) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-
-            Button(
-                onClick = {
-                    movieViewModel.clearMovie()
-                    seriesViewModel.clearSeries()
-                    animeViewModel.fetchAnime()
-                }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.secondary
-                )
-            ) {
-                Text("🎌 Sortear Anime ou Desenho")
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Button(
-                onClick = {
-                    seriesViewModel.clearSeries()
-                    animeViewModel.clearAnime()
-                    movieViewModel.fetchMoviesWithStreaming()
-                }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.secondary
-                )
-            ) {
-                Text("🎬 Sortear Filme com Streaming")
-            }
-
-
-            movieAgeWarning?.let { WarningCard(it) }
-            seriesAgeWarning?.let { WarningCard(it) }
-
-
-            movie?.let {
-                MovieItem(
-                    movie = it, providers = movieProviders[it.id], genreMap = movieGenres
-                )
-            }
-
-            series?.let {
-                SeriesItem(
-                    series = it, providers = seriesProviders[it.id], genreMap = seriesGenres
-                )
-            }
-
-            anime?.let {
-                SeriesItem(
-                    series = it, providers = animeProviders[it.id], genreMap = seriesGenres
-                )
-            }
-            Spacer(modifier = Modifier.weight(1f))
-            TmdbAttribution()
-
         }
     }
 }
-
-
-
