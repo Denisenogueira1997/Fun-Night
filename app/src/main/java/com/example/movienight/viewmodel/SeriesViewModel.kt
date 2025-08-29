@@ -26,6 +26,9 @@ class SeriesViewModel : ViewModel() {
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
+    private val _ageWarning = MutableStateFlow<String?>(null)
+    val ageWarning: StateFlow<String?> = _ageWarning
+
     init {
         fetchGenres()
     }
@@ -91,6 +94,18 @@ class SeriesViewModel : ViewModel() {
                     val s = allResults.firstOrNull()
                     s?.let { serie ->
                         val details = RetrofitInstance.api.getSeriesDetails(serie.id, apiKey)
+
+                        try {
+                            val ratings = RetrofitInstance.api.getSeriesContentRatings(s.id, apiKey)
+                            val brCert =
+                                ratings.results.firstOrNull { it.iso_3166_1 == "BR" }?.rating
+                            setAgeRating(brCert)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                            _ageWarning.value = null
+                        }
+
+
                         val seriesWithDetails = Series(
                             id = details.id,
                             name = details.name,
@@ -107,7 +122,7 @@ class SeriesViewModel : ViewModel() {
 
                         try {
                             val providersResponse =
-                                RetrofitInstance.api.getWatchProviders(serie.id, apiKey)
+                                RetrofitInstance.api.getSeriesWatchProviders(serie.id, apiKey)
                             val br = providersResponse.results["BR"]
                             val allProviders = mutableListOf<Provider>()
                             br?.flatrate?.forEach { allProviders.add(it.copy(type = "flatrate")) }
@@ -136,5 +151,14 @@ class SeriesViewModel : ViewModel() {
     fun clearSeries() {
         _selectedSeries.value = null
         _streamingMap.value = emptyMap()
+    }
+
+    private fun setAgeRating(brCert: String?) {
+        _ageWarning.value = when {
+            brCert.isNullOrEmpty() -> null
+            brCert.equals("L", ignoreCase = true) -> "L"
+            brCert.toIntOrNull() != null -> brCert + "anos"
+            else -> null
+        }
     }
 }

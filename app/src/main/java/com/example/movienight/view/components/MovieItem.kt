@@ -25,7 +25,10 @@ import com.example.movienight.dto.Provider
 
 @Composable
 fun MovieItem(
-    movie: Movie, providers: List<Provider>?, genreMap: Map<Int, String> = emptyMap()
+    movie: Movie,
+    providers: List<Provider>?,
+    genreMap: Map<Int, String> = emptyMap(),
+    ageWarning: String? = null
 ) {
     Card(
         modifier = Modifier
@@ -81,7 +84,7 @@ fun MovieItem(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                val genreNames = movie.genre_ids?.mapNotNull { genreMap[it] }?.joinToString(", ")
+                val genreNames = movie.genre_ids?.mapNotNull { genreMap[it] }?.joinToString(",")
                     ?: "Desconhecido"
                 Text(text = "Gêneros: $genreNames")
 
@@ -107,6 +110,10 @@ fun MovieItem(
                     Text("Duração: $it min")
                 } ?: Text("Duração não disponível")
 
+                WarningCard(
+                    ageWarning ?: "Classificação indicativa não disponível",
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
             }
 
         }

@@ -7,14 +7,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -32,12 +30,14 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.movienight.view.components.MovieItem
 import com.example.movienight.view.components.SeriesItem
 import com.example.movienight.view.components.TmdbAttribution
-import com.example.movienight.view.components.WarningCard
 import com.example.movienight.viewmodel.AnimeViewModel
 import com.example.movienight.viewmodel.MovieViewModel
 import com.example.movienight.viewmodel.SeriesViewModel
@@ -73,17 +73,21 @@ fun MainScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Tela Inicial", color = MaterialTheme.colorScheme.onPrimary) },
+                title = {
+                    Text(
+                        "Tela Inicial",
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontSize = 30.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontStyle = FontStyle.Normal
+                    )
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary
                 ),
-                modifier = Modifier.fillMaxWidth()
             )
-        },
-        modifier = Modifier
-            .fillMaxSize()
-            .windowInsetsPadding(WindowInsets.systemBars)
-            .consumeWindowInsets(WindowInsets.systemBars),
+        }, modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
 
         Box(modifier = Modifier.fillMaxSize()) {
@@ -111,10 +115,10 @@ fun MainScreen(
                         containerColor = MaterialTheme.colorScheme.secondary
                     )
                 ) {
-                    Text("🎬 Sortear Filme")
+                    Text("🎬 Sortear Filme", fontSize = 16.sp)
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
                 Button(
                     onClick = {
@@ -125,10 +129,10 @@ fun MainScreen(
                         containerColor = MaterialTheme.colorScheme.secondary
                     )
                 ) {
-                    Text("📺 Sortear Série")
+                    Text("📺 Sortear Série", fontSize = 16.sp)
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
                 Button(
                     onClick = {
@@ -139,10 +143,10 @@ fun MainScreen(
                         containerColor = MaterialTheme.colorScheme.secondary
                     )
                 ) {
-                    Text("🎌 Sortear Anime ou Desenho")
+                    Text("🎌 Sortear Anime ou Desenho", fontSize = 16.sp)
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
                 Button(
                     onClick = {
@@ -153,16 +157,17 @@ fun MainScreen(
                         containerColor = MaterialTheme.colorScheme.secondary
                     )
                 ) {
-                    Text("🎬 Sortear Filme com Streaming")
+                    Text("🎬 Sortear Filme com Streaming", fontSize = 16.sp)
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
-
-                movieAgeWarning?.let { WarningCard(it) }
+                Spacer(modifier = Modifier.height(20.dp))
 
                 movie?.let {
                     MovieItem(
-                        movie = it, providers = movieProviders[it.id], genreMap = movieGenres
+                        movie = it,
+                        providers = movieProviders[it.id],
+                        genreMap = movieGenres,
+                        ageWarning = movieAgeWarning
                     )
                 }
 

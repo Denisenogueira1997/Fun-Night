@@ -32,14 +32,13 @@ data class SeriesDetailsResponse(
     @SerializedName("number_of_seasons") val numberOfSeasons: Int?
 )
 
-data class ContentRatingsResponse(
-    val results: List<ContentRating>
-)
 
-data class ContentRating(
-    val iso_3166_1: String, val rating: String
-)
+data class SeriesContentRatingResponse(val results: List<SeriesRating>)
 
+data class SeriesRating(
+    val iso_3166_1: String,
+    val rating: String
+)
 
 
 

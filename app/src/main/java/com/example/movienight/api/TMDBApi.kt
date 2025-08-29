@@ -1,11 +1,11 @@
 package com.example.movienight.api
 
 
-import com.example.movienight.dto.ContentRatingsResponse
 import com.example.movienight.dto.GenreResponse
 import com.example.movienight.dto.MovieDetailsResponse
 import com.example.movienight.dto.MovieResponse
 import com.example.movienight.dto.ReleaseDatesResponse
+import com.example.movienight.dto.SeriesContentRatingResponse
 import com.example.movienight.dto.SeriesDetailsResponse
 import com.example.movienight.dto.SeriesResponse
 import com.example.movienight.dto.WatchProvidersResponse
@@ -66,7 +66,7 @@ interface TMDBApi {
     @GET("tv/{tv_id}/content_ratings")
     suspend fun getSeriesContentRatings(
         @Path("tv_id") tvId: Int, @Query("api_key") apiKey: String
-    ): ContentRatingsResponse
+    ): SeriesContentRatingResponse
 
 
     @GET("tv/{tv_id}")
@@ -80,6 +80,11 @@ interface TMDBApi {
     @GET("movie/{movie_id}/watch/providers")
     suspend fun getWatchProviders(
         @Path("movie_id") movieId: Int, @Query("api_key") apiKey: String
+    ): WatchProvidersResponse
+
+    @GET("tv/{series_id}/watch/providers")
+    suspend fun getSeriesWatchProviders(
+        @Path("series_id") seriesId: Int, @Query("api_key") apiKey: String
     ): WatchProvidersResponse
 
 

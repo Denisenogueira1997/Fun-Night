@@ -27,6 +27,9 @@ class AnimeViewModel : ViewModel() {
         return !text.isNullOrBlank() && text.any { it.isLetter() && it.code < 256 }
     }
 
+    private val _ageWarning = MutableStateFlow<String?>(null)
+    val ageWarning: StateFlow<String?> = _ageWarning
+
     fun fetchAnime(
         pagesToSearch: Int = 5,
         k: Float = 30f,
@@ -73,6 +76,17 @@ class AnimeViewModel : ViewModel() {
                     val s = allResults.firstOrNull()
                     s?.let { serie ->
                         val details = RetrofitInstance.api.getSeriesDetails(serie.id, apiKey)
+
+                        try {
+                            val ratings = RetrofitInstance.api.getSeriesContentRatings(s.id, apiKey)
+                            val brCert =
+                                ratings.results.firstOrNull { it.iso_3166_1 == "BR" }?.rating
+                            setAgeRating(brCert)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                            _ageWarning.value = null
+                        }
+
                         val animeWithDetails = Series(
                             id = details.id,
                             name = details.name,
@@ -117,5 +131,14 @@ class AnimeViewModel : ViewModel() {
     fun clearAnime() {
         _selectedAnime.value = null
         _streamingMap.value = emptyMap()
+    }
+
+    private fun setAgeRating(brCert: String?) {
+        _ageWarning.value = when {
+            brCert.isNullOrEmpty() -> null
+            brCert.equals("L", ignoreCase = true) -> "L"
+            brCert.toIntOrNull() != null -> brCert + "anos"
+            else -> null
+        }
     }
 }

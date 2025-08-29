@@ -93,10 +93,23 @@ class MovieViewModel : ViewModel() {
 
                     movieFound = allResults.firstOrNull()?.let { randomMovie ->
                         val details = RetrofitInstance.api.getMovieDetails(randomMovie.id, apiKey)
+
+                        val releaseDates =
+                            RetrofitInstance.api.getMovieReleaseDates(randomMovie.id, apiKey)
+                        val brCert =
+                            releaseDates.results.firstOrNull { it.iso_3166_1 == "BR" }?.release_dates?.firstOrNull()?.certification
+
+                        _ageWarning.value = when {
+                            brCert.isNullOrEmpty() -> null
+                            brCert.equals("L", ignoreCase = true) -> "L"
+                            brCert.toIntOrNull() != null -> brCert + "anos"
+                            else -> null
+                        }
                         val movieWithRuntime = randomMovie.copy(runtime = details.runtime)
                         fetchWatchProviders(movieWithRuntime.id)
                         movieWithRuntime
                     }
+
 
                     _selectedMovie.value = movieFound
 
@@ -169,15 +182,17 @@ class MovieViewModel : ViewModel() {
                             _streamingMap.value = mapOf(movie.id to allProviders)
 
                             val brCert = RetrofitInstance.api.getMovieReleaseDates(
-                                movie.id,
-                                apiKey
+                                movie.id, apiKey
                             ).results.find { it.iso_3166_1 == "BR" }?.release_dates?.firstOrNull()?.certification
+
 
                             _ageWarning.value = when {
                                 brCert.isNullOrEmpty() -> null
-                                brCert.toIntOrNull() != null && brCert.toInt() > 16 -> "Filme indicado para maiores de $brCert anos."
-                                else -> "Classificação: $brCert"
+                                brCert.equals("L", ignoreCase = true) -> "L"
+                                brCert.toIntOrNull() != null -> brCert + "anos"
+                                else -> null
                             }
+
 
                             movieFound = movieWithRuntime
                             break

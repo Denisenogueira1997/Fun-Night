@@ -24,7 +24,11 @@ import com.example.movienight.dto.Series
 
 @Composable
 fun SeriesItem(
-    series: Series, providers: List<Provider>?, genreMap: Map<Int, String> = emptyMap()
+    series: Series,
+    providers: List<Provider>?,
+    genreMap: Map<Int, String> = emptyMap(),
+    ageWarning: String? = null
+
 ) {
     Card(
         modifier = Modifier
@@ -102,7 +106,10 @@ fun SeriesItem(
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(text = "Temporadas: ${series.numberOfSeasons ?: "Desconhecido"}")
 
-
+                WarningCard(
+                    ageWarning ?: "Classificação indicativa não disponível",
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
             }
         }
     }
