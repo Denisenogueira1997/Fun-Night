@@ -58,6 +58,7 @@ class SeriesViewModel : ViewModel() {
         viewModelScope.launch {
             _selectedSeries.value = null
             _streamingMap.value = emptyMap()
+            _ageWarning.value = null
             _isLoading.value = true
 
             var seriesFound: Series? = null
@@ -95,15 +96,15 @@ class SeriesViewModel : ViewModel() {
                     s?.let { serie ->
                         val details = RetrofitInstance.api.getSeriesDetails(serie.id, apiKey)
 
-                        try {
-                            val ratings = RetrofitInstance.api.getSeriesContentRatings(s.id, apiKey)
-                            val brCert =
-                                ratings.results.firstOrNull { it.iso_3166_1 == "BR" }?.rating
-                            setAgeRating(brCert)
+                        val brCert = try {
+                            val ratings =
+                                RetrofitInstance.api.getSeriesContentRatings(serie.id, apiKey)
+                            ratings.results.firstOrNull { it.iso_3166_1 == "BR" }?.rating
+                                ?: ratings.results.firstOrNull()?.rating
                         } catch (e: Exception) {
-                            e.printStackTrace()
-                            _ageWarning.value = null
+                            null
                         }
+                        setAgeRating(brCert)
 
 
                         val seriesWithDetails = Series(
@@ -141,6 +142,7 @@ class SeriesViewModel : ViewModel() {
 
                 } catch (e: Exception) {
                     e.printStackTrace()
+                    _ageWarning.value = null
                 }
             }
 
@@ -150,6 +152,7 @@ class SeriesViewModel : ViewModel() {
 
     fun clearSeries() {
         _selectedSeries.value = null
+        _ageWarning.value = null
         _streamingMap.value = emptyMap()
     }
 
@@ -157,8 +160,8 @@ class SeriesViewModel : ViewModel() {
         _ageWarning.value = when {
             brCert.isNullOrEmpty() -> null
             brCert.equals("L", ignoreCase = true) -> "L"
-            brCert.toIntOrNull() != null -> brCert + "anos"
-            else -> null
+            brCert.toIntOrNull() != null -> brCert
+            else -> brCert
         }
     }
 }

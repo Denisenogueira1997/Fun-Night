@@ -40,6 +40,7 @@ class AnimeViewModel : ViewModel() {
         viewModelScope.launch {
             _selectedAnime.value = null
             _streamingMap.value = emptyMap()
+            _ageWarning.value = null
             _isLoading.value = true
 
             var animeFound: Series? = null
@@ -77,16 +78,15 @@ class AnimeViewModel : ViewModel() {
                     s?.let { serie ->
                         val details = RetrofitInstance.api.getSeriesDetails(serie.id, apiKey)
 
-                        try {
-                            val ratings = RetrofitInstance.api.getSeriesContentRatings(s.id, apiKey)
-                            val brCert =
-                                ratings.results.firstOrNull { it.iso_3166_1 == "BR" }?.rating
-                            setAgeRating(brCert)
+                        val brCert = try {
+                            val ratings =
+                                RetrofitInstance.api.getSeriesContentRatings(serie.id, apiKey)
+                            ratings.results.firstOrNull { it.iso_3166_1 == "BR" }?.rating
+                                ?: ratings.results.firstOrNull()?.rating
                         } catch (e: Exception) {
-                            e.printStackTrace()
-                            _ageWarning.value = null
+                            null
                         }
-
+                        setAgeRating(brCert)
                         val animeWithDetails = Series(
                             id = details.id,
                             name = details.name,
@@ -121,6 +121,7 @@ class AnimeViewModel : ViewModel() {
 
                 } catch (e: Exception) {
                     e.printStackTrace()
+                    _ageWarning.value = null
                 }
             }
 
@@ -137,8 +138,8 @@ class AnimeViewModel : ViewModel() {
         _ageWarning.value = when {
             brCert.isNullOrEmpty() -> null
             brCert.equals("L", ignoreCase = true) -> "L"
-            brCert.toIntOrNull() != null -> brCert + "anos"
-            else -> null
+            brCert.toIntOrNull() != null -> brCert
+            else -> brCert
         }
     }
 }

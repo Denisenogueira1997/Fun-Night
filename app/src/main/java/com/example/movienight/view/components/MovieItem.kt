@@ -111,7 +111,7 @@ fun MovieItem(
                 } ?: Text("Duração não disponível")
 
                 WarningCard(
-                    ageWarning ?: "Classificação indicativa não disponível",
+                    ageWarning ?: "Classificação Indicativa não disponível",
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 )
             }

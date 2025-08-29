@@ -107,7 +107,7 @@ fun SeriesItem(
                 Text(text = "Temporadas: ${series.numberOfSeasons ?: "Desconhecido"}")
 
                 WarningCard(
-                    ageWarning ?: "Classificação indicativa não disponível",
+                    ageWarning ?: "Classificação Indicativa não disponível",
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 )
             }

@@ -93,28 +93,26 @@ class MovieViewModel : ViewModel() {
 
                     movieFound = allResults.firstOrNull()?.let { randomMovie ->
                         val details = RetrofitInstance.api.getMovieDetails(randomMovie.id, apiKey)
-
                         val releaseDates =
                             RetrofitInstance.api.getMovieReleaseDates(randomMovie.id, apiKey)
-                        val brCert =
-                            releaseDates.results.firstOrNull { it.iso_3166_1 == "BR" }?.release_dates?.firstOrNull()?.certification
 
-                        _ageWarning.value = when {
-                            brCert.isNullOrEmpty() -> null
-                            brCert.equals("L", ignoreCase = true) -> "L"
-                            brCert.toIntOrNull() != null -> brCert + "anos"
-                            else -> null
-                        }
+                        // Busca classificação BR ou fallback para qualquer outro país
+                        val brCert =
+                            releaseDates.results.firstOrNull { it.iso_3166_1 == "BR" }?.release_dates?.firstOrNull { !it.certification.isNullOrEmpty() }?.certification
+                                ?: releaseDates.results.firstOrNull { it.release_dates.isNotEmpty() }?.release_dates?.firstOrNull { !it.certification.isNullOrEmpty() }?.certification
+
+                        _ageWarning.value = brCert
+
                         val movieWithRuntime = randomMovie.copy(runtime = details.runtime)
                         fetchWatchProviders(movieWithRuntime.id)
                         movieWithRuntime
                     }
 
-
                     _selectedMovie.value = movieFound
 
                 } catch (e: Exception) {
                     e.printStackTrace()
+                    _ageWarning.value = null
                 }
             }
 
@@ -189,8 +187,8 @@ class MovieViewModel : ViewModel() {
                             _ageWarning.value = when {
                                 brCert.isNullOrEmpty() -> null
                                 brCert.equals("L", ignoreCase = true) -> "L"
-                                brCert.toIntOrNull() != null -> brCert + "anos"
-                                else -> null
+                                brCert.toIntOrNull() != null -> brCert
+                                else -> brCert
                             }
 
 
