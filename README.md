@@ -1,4 +1,4 @@
-# 🎬 Fun-Night
+#  Fun-Night
 
 **Fun-Night** é um aplicativo Android desenvolvido em **Kotlin** que permite aos usuários sortear filmes, séries, animes e desenhos com base nas avaliações dos usuários, utilizando a [API TMDB](https://www.themoviedb.org/).
 
@@ -20,8 +20,28 @@
 - **Glide:** Carregamento eficiente de imagens.
 
 ---
+# Fun-Night
 
-## Telas
+Fun-Night is an Android app developed in Kotlin that allows users to raffle movies, series, anime, and cartoons based on user ratings, using the TMDb API (https://www.themoviedb.org/).
+
+---
+
+## Features
+
+- Intuitive Interface: Modern and easy-to-use design, developed with Jetpack Compose (https://developer.android.com/jetpack/compose).
+- TMDB Integration: Uses the TMDb API (https://www.themoviedb.org/) to get up-to-date information about titles.
+
+---
+
+## Technologies Used
+
+- Kotlin: Main language for Android development.
+- Jetpack Compose: Modern framework for building interfaces. - **TMDB API:** Data source for movies, series, anime, and cartoons.
+- **Retrofit:** Library for HTTP requests.
+- **Glide:** Efficient image loading.
+
+
+## Telas/ Screen
 
 <div style="display: flex; gap: 200px;">
   <img src="https://github.com/user-attachments/assets/cf241be6-73b7-4f27-aaaf-adb6da64a127" width="350"/>
