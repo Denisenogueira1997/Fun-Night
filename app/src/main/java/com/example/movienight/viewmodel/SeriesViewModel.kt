@@ -50,9 +50,9 @@ class SeriesViewModel : ViewModel() {
 
     fun fetchSeries(
         pagesToSearch: Int = 5,
-        k: Float = 30f,
-        minWeightedScore: Float = 7f,
-        minVoteCount: Int = 10,
+        k: Float = 20f,
+        minWeightedScore: Float = 6.8f,
+        minVoteCount: Int = 20,
         maxAttempts: Int = 2
     ) {
         viewModelScope.launch {
@@ -69,7 +69,6 @@ class SeriesViewModel : ViewModel() {
 
                 try {
                     val pages = (1..500).shuffled().take(pagesToSearch)
-                    val allResults = mutableListOf<Series>()
 
                     for (page in pages) {
                         val response = RetrofitInstance.api.discoverSeries(
@@ -80,21 +79,27 @@ class SeriesViewModel : ViewModel() {
                             minVote = 0f,
                             withoutGenres = null
                         )
-                        val filtered = response.results.filter { s ->
-                            val weightedScore =
-                                (s.voteAverage * s.voteCount + 7f * k) / (s.voteCount + k)
-                            weightedScore >= minWeightedScore && s.voteCount >= minVoteCount && isTitleLatin(
-                                s.name
-                            ) && s.genre_ids?.none { it == 16 } == true
+
+                        val candidate = response.results
+                            .shuffled()
+                            .firstOrNull { s ->
+                                val weightedScore =
+                                    (s.voteAverage * s.voteCount + 7f * k) / (s.voteCount + k)
+
+                                weightedScore >= minWeightedScore &&
+                                        isTitleLatin(s.name) &&
+                                        s.genre_ids?.none { it == 16 } == true
+                            }
+
+                        if (candidate != null) {
+                            seriesFound = candidate
+                            break
                         }
-                        allResults.addAll(filtered)
                     }
 
-                    allResults.shuffle()
-
-                    val s = allResults.firstOrNull()
-                    s?.let { serie ->
-                        val details = RetrofitInstance.api.getSeriesDetails(serie.id, apiKey)
+                    seriesFound?.let { serie ->
+                        val details =
+                            RetrofitInstance.api.getSeriesDetails(serie.id, apiKey)
 
                         val brCert = try {
                             val ratings =
@@ -106,7 +111,6 @@ class SeriesViewModel : ViewModel() {
                         }
                         setAgeRating(brCert)
 
-
                         val seriesWithDetails = Series(
                             id = details.id,
                             name = details.name,
@@ -117,24 +121,34 @@ class SeriesViewModel : ViewModel() {
                             original_language = details.originalLanguage,
                             overview = details.overview,
                             genre_ids = details.genres?.map { it.id } ?: emptyList(),
-                            numberOfSeasons = details.numberOfSeasons)
-                        _selectedSeries.value = seriesWithDetails
+                            numberOfSeasons = details.numberOfSeasons
+                        )
 
+                        _selectedSeries.value = seriesWithDetails
 
                         try {
                             val providersResponse =
                                 RetrofitInstance.api.getSeriesWatchProviders(serie.id, apiKey)
                             val br = providersResponse.results["BR"]
-                            val allProviders = mutableListOf<Provider>()
-                            br?.flatrate?.forEach { allProviders.add(it.copy(type = "flatrate")) }
-                            br?.rent?.forEach { allProviders.add(it.copy(type = "rent")) }
-                            br?.buy?.forEach { allProviders.add(it.copy(type = "buy")) }
 
-                            _streamingMap.value = mapOf(seriesWithDetails.id to allProviders)
+                            val allProviders = mutableListOf<Provider>()
+                            br?.flatrate?.forEach {
+                                allProviders.add(it.copy(type = "flatrate"))
+                            }
+                            br?.rent?.forEach {
+                                allProviders.add(it.copy(type = "rent"))
+                            }
+                            br?.buy?.forEach {
+                                allProviders.add(it.copy(type = "buy"))
+                            }
+
+                            _streamingMap.value =
+                                mapOf(seriesWithDetails.id to allProviders)
 
                         } catch (e: Exception) {
                             e.printStackTrace()
-                            _streamingMap.value = mapOf(seriesWithDetails.id to emptyList())
+                            _streamingMap.value =
+                                mapOf(seriesWithDetails.id to emptyList())
                         }
 
                         seriesFound = seriesWithDetails
@@ -149,6 +163,7 @@ class SeriesViewModel : ViewModel() {
             _isLoading.value = false
         }
     }
+
 
     fun clearSeries() {
         _selectedSeries.value = null

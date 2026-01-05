@@ -51,9 +51,9 @@ class MovieViewModel : ViewModel() {
 
     fun fetchMovies(
         pagesToSearch: Int = 5,
-        k: Float = 30f,
-        minWeightedScore: Float = 7f,
-        minVoteCount: Int = 10,
+        k: Float = 25f,
+        minWeightedScore: Float = 7.0f,
+        minVoteCount: Int = 30,
         maxAttempts: Int = 2
     ) {
         viewModelScope.launch {
@@ -78,25 +78,33 @@ class MovieViewModel : ViewModel() {
                                 page = page,
                                 voteCount = minVoteCount,
                                 minVote = 0f,
-                                withoutGenres = null
+                                withoutGenres = null,
+                                minReleaseDate = "1975-01-01"
                             )
                         }
                     }.awaitAll()
 
                     val allResults = responses.flatMap { res ->
                         res.results.filter { m ->
+                            val genres = m.genre_ids ?: emptyList()
+
+                            val isOnlyDrama = genres.size == 1 && genres.contains(18)
+
                             val weightedScore =
                                 (m.voteAverage * m.voteCount + 7f * k) / (m.voteCount + k)
-                            weightedScore >= minWeightedScore && isTitleLatin(m.title) && m.genre_ids?.none { it == 27 } == true
+
+                            weightedScore >= minWeightedScore &&
+                                    isTitleLatin(m.title) &&
+                                    !isOnlyDrama &&
+                                    genres.none { it == 27 }
                         }
+
                     }.shuffled()
 
                     movieFound = allResults.firstOrNull()?.let { randomMovie ->
                         val details = RetrofitInstance.api.getMovieDetails(randomMovie.id, apiKey)
                         val releaseDates =
                             RetrofitInstance.api.getMovieReleaseDates(randomMovie.id, apiKey)
-
-                        // Busca classificação BR ou fallback para qualquer outro país
                         val brCert =
                             releaseDates.results.firstOrNull { it.iso_3166_1 == "BR" }?.release_dates?.firstOrNull { !it.certification.isNullOrEmpty() }?.certification
                                 ?: releaseDates.results.firstOrNull { it.release_dates.isNotEmpty() }?.release_dates?.firstOrNull { !it.certification.isNullOrEmpty() }?.certification
@@ -150,7 +158,8 @@ class MovieViewModel : ViewModel() {
                                 voteCount = 1,
                                 minVote = 0f,
                                 sortBy = "popularity.desc",
-                                withoutGenres = "27"
+                                withoutGenres = "27",
+                                minReleaseDate = "1975-01-01"
                             )
                         }
                     }.awaitAll()

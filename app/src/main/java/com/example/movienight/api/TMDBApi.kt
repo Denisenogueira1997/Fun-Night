@@ -25,7 +25,8 @@ interface TMDBApi {
         @Query("vote_count.gte") voteCount: Int,
         @Query("vote_average.gte") minVote: Float,
         @Query("page") page: Int,
-        @Query("without_genres") withoutGenres: String? = null
+        @Query("without_genres") withoutGenres: String? = null,
+        @Query("primary_release_date.gte") minReleaseDate: String
     ): MovieResponse
 
     @GET("genre/movie/list")
