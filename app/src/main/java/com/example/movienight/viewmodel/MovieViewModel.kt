@@ -51,9 +51,9 @@ class MovieViewModel : ViewModel() {
 
     fun fetchMovies(
         pagesToSearch: Int = 5,
-        k: Float = 25f,
-        minWeightedScore: Float = 7.0f,
-        minVoteCount: Int = 30,
+        k: Float = 15f,
+        minWeightedScore: Float = 6.7f,
+        minVoteCount: Int = 20,
         maxAttempts: Int = 2
     ) {
         viewModelScope.launch {

@@ -32,9 +32,9 @@ class AnimeViewModel : ViewModel() {
 
     fun fetchAnime(
         pagesToSearch: Int = 5,
-        k: Float = 30f,
-        minWeightedScore: Float = 7f,
-        minVoteCount: Int = 10,
+        k: Float = 8f,
+        minWeightedScore: Float = 6.5f,
+        minVoteCount: Int = 5,
         maxAttempts: Int = 2
     ) {
         viewModelScope.launch {
