@@ -39,6 +39,7 @@ import com.example.movienight.view.components.MovieItem
 import com.example.movienight.view.components.SeriesItem
 import com.example.movienight.view.components.TmdbAttribution
 import com.example.movienight.viewmodel.AnimeViewModel
+import com.example.movienight.viewmodel.CartoonViewModel
 import com.example.movienight.viewmodel.MovieViewModel
 import com.example.movienight.viewmodel.SeriesViewModel
 
@@ -47,7 +48,8 @@ import com.example.movienight.viewmodel.SeriesViewModel
 fun MainScreen(
     movieViewModel: MovieViewModel = viewModel(),
     seriesViewModel: SeriesViewModel = viewModel(),
-    animeViewModel: AnimeViewModel = viewModel()
+    animeViewModel: AnimeViewModel = viewModel(),
+    cartoonViewModel: CartoonViewModel = viewModel()
 ) {
 
     val movieGenres by movieViewModel.genres.collectAsState()
@@ -66,7 +68,11 @@ fun MainScreen(
     val isLoadingAnime by animeViewModel.isLoading.collectAsState()
     val animeProviders by animeViewModel.streamingMap.collectAsState()
 
-    val isLoadingAny = isLoading || isLoadingSeries || isLoadingAnime
+    val cartoon by cartoonViewModel.selectedCartoon.collectAsState()
+    val isLoadingCartoon by cartoonViewModel.isLoading.collectAsState()
+    val cartoonProviders by cartoonViewModel.streamingMap.collectAsState()
+
+    val isLoadingAny = isLoading || isLoadingSeries || isLoadingAnime || isLoadingCartoon
 
     val scrollState = rememberScrollState()
 
@@ -110,6 +116,7 @@ fun MainScreen(
                     onClick = {
                         seriesViewModel.clearSeries()
                         animeViewModel.clearAnime()
+                        cartoonViewModel.clearCartoon()
                         movieViewModel.fetchMovies()
                     }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.secondary
@@ -124,6 +131,7 @@ fun MainScreen(
                     onClick = {
                         movieViewModel.clearMovie()
                         animeViewModel.clearAnime()
+                        cartoonViewModel.clearCartoon()
                         seriesViewModel.fetchSeries()
                     }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.secondary
@@ -138,12 +146,27 @@ fun MainScreen(
                     onClick = {
                         movieViewModel.clearMovie()
                         seriesViewModel.clearSeries()
+                        cartoonViewModel.clearCartoon()
                         animeViewModel.fetchAnime()
                     }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.secondary
                     )
                 ) {
-                    Text("🎌 Sortear Anime ou Desenho", fontSize = 16.sp)
+                    Text("🎌 Sortear Anime", fontSize = 16.sp)
+                }
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Button(
+                    onClick = {
+                        seriesViewModel.clearSeries()
+                        animeViewModel.clearAnime()
+                        movieViewModel.clearMovie()
+                        cartoonViewModel.fetchCartoon()
+                    }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondary
+                    )
+                ) {
+                    Text("🎌 Sortear Desenho", fontSize = 16.sp)
                 }
 
                 Spacer(modifier = Modifier.height(20.dp))
@@ -152,6 +175,7 @@ fun MainScreen(
                     onClick = {
                         seriesViewModel.clearSeries()
                         animeViewModel.clearAnime()
+                        cartoonViewModel.clearCartoon()
                         movieViewModel.fetchMoviesWithSelectedStreaming()
                     }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.secondary
@@ -180,6 +204,14 @@ fun MainScreen(
                 anime?.let {
                     SeriesItem(
                         series = it, providers = animeProviders[it.id], genreMap = seriesGenres
+                    )
+                }
+
+                cartoon?.let {
+                    SeriesItem(
+                        series = it,
+                        providers = cartoonProviders[it.id],
+                        genreMap = seriesGenres
                     )
                 }
 

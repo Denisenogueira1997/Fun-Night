@@ -79,7 +79,7 @@ class MovieViewModel : ViewModel() {
                                 voteCount = minVoteCount,
                                 minVote = 0f,
                                 withoutGenres = null,
-                                minReleaseDate = "1975-01-01"
+                                minReleaseDate = "1985-01-01"
                             )
                         }
                     }.awaitAll()
@@ -129,7 +129,7 @@ class MovieViewModel : ViewModel() {
     }
 
     fun fetchMoviesWithSelectedStreaming(
-        selectedProviderIds: List<Int> = listOf(119, 13, 49, 118, 137),
+        selectedProviderIds: List<Int> = listOf(49, 118, 119, 531),
         pagesToSearch: Int = 5,
         k: Float = 30f,
         minWeightedScore: Float = 7f,
@@ -159,7 +159,7 @@ class MovieViewModel : ViewModel() {
                                 minVote = 0f,
                                 sortBy = "popularity.desc",
                                 withoutGenres = "27",
-                                minReleaseDate = "1975-01-01"
+                                minReleaseDate = "1950-01-01"
                             )
                         }
                     }.awaitAll()
@@ -171,50 +171,163 @@ class MovieViewModel : ViewModel() {
                             weightedScore >= minWeightedScore && isTitleLatin(movie.title)
                         }
                     }.shuffled()
+                    val candidates = allResults.take(20)
 
-                    for (movie in allResults) {
-                        val details = RetrofitInstance.api.getMovieDetails(movie.id, apiKey)
-                        val providersResponse =
-                            RetrofitInstance.api.getWatchProviders(movie.id, apiKey)
+                    val moviesWithProviders = candidates.map { movie ->
 
-                        val br = providersResponse.results["BR"]
-                        val allProviders = mutableListOf<Provider>()
-                        br?.flatrate?.forEach { allProviders.add(it.copy(type = "flatrate")) }
-                        br?.rent?.forEach { allProviders.add(it.copy(type = "rent")) }
-                        br?.buy?.forEach { allProviders.add(it.copy(type = "buy")) }
+                        async {
 
-                        if (allProviders.any { it.provider_id in selectedProviderIds }) {
-                            val movieWithRuntime = movie.copy(runtime = details.runtime)
-                            _selectedMovie.value = movieWithRuntime
-                            _streamingMap.value = mapOf(movie.id to allProviders)
+                            try {
 
-                            val brCert = RetrofitInstance.api.getMovieReleaseDates(
-                                movie.id, apiKey
-                            ).results.find { it.iso_3166_1 == "BR" }?.release_dates?.firstOrNull()?.certification
+                                val providersResponse =
+                                    RetrofitInstance.api.getWatchProviders(
+                                        movie.id,
+                                        apiKey
+                                    )
+
+                                val br =
+                                    providersResponse.results["BR"]
+
+                                val allProviders =
+                                    mutableListOf<Provider>()
 
 
-                            _ageWarning.value = when {
-                                brCert.isNullOrEmpty() -> null
-                                brCert.equals("L", ignoreCase = true) -> "L"
-                                brCert.toIntOrNull() != null -> brCert
-                                else -> brCert
+                                br?.flatrate?.forEach {
+                                    allProviders.add(
+                                        it.copy(type = "flatrate")
+                                    )
+                                }
+
+
+                                br?.rent?.forEach {
+                                    allProviders.add(
+                                        it.copy(type = "rent")
+                                    )
+                                }
+
+
+                                br?.buy?.forEach {
+                                    allProviders.add(
+                                        it.copy(type = "buy")
+                                    )
+                                }
+
+
+                                if (
+                                    allProviders.any {
+                                        it.provider_id in selectedProviderIds
+                                    }
+                                ) {
+
+                                    movie to allProviders
+
+                                } else {
+
+                                    null
+                                }
+
+
+                            } catch (e: Exception) {
+
+                                null
+                            }
+
+                        }
+
+                    }.awaitAll()
+
+
+                    val selected =
+                        moviesWithProviders
+                            .filterNotNull()
+                            .firstOrNull()
+
+
+                    selected?.let { (movie, providers) ->
+
+
+                        val details =
+                            RetrofitInstance.api.getMovieDetails(
+                                movie.id,
+                                apiKey
+                            )
+
+
+                        val movieWithRuntime =
+                            movie.copy(
+                                runtime = details.runtime
+                            )
+
+
+                        _selectedMovie.value =
+                            movieWithRuntime
+
+
+                        _streamingMap.value =
+                            mapOf(
+                                movie.id to providers
+                            )
+
+
+                        val brCert =
+                            try {
+
+                                RetrofitInstance.api
+                                    .getMovieReleaseDates(
+                                        movie.id,
+                                        apiKey
+                                    )
+                                    .results
+                                    .find {
+                                        it.iso_3166_1 == "BR"
+                                    }
+                                    ?.release_dates
+                                    ?.firstOrNull()
+                                    ?.certification
+
+                            } catch (e: Exception) {
+
+                                null
                             }
 
 
-                            movieFound = movieWithRuntime
-                            break
-                        }
+                        _ageWarning.value =
+                            when {
+
+                                brCert.isNullOrEmpty() ->
+                                    null
+
+                                brCert.equals(
+                                    "L",
+                                    ignoreCase = true
+                                ) ->
+                                    "L"
+
+                                brCert.toIntOrNull() != null ->
+                                    brCert
+
+                                else ->
+                                    brCert
+                            }
+
+
+                        movieFound =
+                            movieWithRuntime
                     }
 
+
                 } catch (e: Exception) {
+
                     e.printStackTrace()
                     _ageWarning.value = null
                 }
             }
 
+
             _isLoading.value = false
         }
     }
+
 
     private fun fetchWatchProviders(movieId: Int) {
         viewModelScope.launch {
