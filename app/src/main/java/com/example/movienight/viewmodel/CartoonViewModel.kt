@@ -31,11 +31,11 @@ class CartoonViewModel : ViewModel() {
     val ageWarning: StateFlow<String?> = _ageWarning
 
     fun fetchCartoon(
-        pagesToSearch: Int = 5,
+        pagesToSearch: Int = 10,
         k: Float = 15f,
         minWeightedScore: Float = 7f,
         minVoteCount: Int = 15,
-        maxAttempts: Int = 2
+        maxAttempts: Int = 3
     ) {
         viewModelScope.launch {
             _selectedCartoon.value = null

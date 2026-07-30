@@ -50,11 +50,11 @@ class MovieViewModel : ViewModel() {
     }
 
     fun fetchMovies(
-        pagesToSearch: Int = 5,
-        k: Float = 20f,
+        pagesToSearch: Int = 10,
+        k: Float = 30f,
         minWeightedScore: Float = 7f,
         minVoteCount: Int = 30,
-        maxAttempts: Int = 2
+        maxAttempts: Int = 3
     ) {
         viewModelScope.launch {
             _selectedMovie.value = null
@@ -152,11 +152,11 @@ class MovieViewModel : ViewModel() {
 
     fun fetchMoviesWithSelectedStreaming(
         selectedProviderIds: List<Int> = listOf(49, 118, 119, 531),
-        pagesToSearch: Int = 5,
-        k: Float = 20f,
+        pagesToSearch: Int = 10,
+        k: Float = 30f,
         minWeightedScore: Float = 7f,
         minVoteCount: Int = 30,
-        maxAttempts: Int = 2
+        maxAttempts: Int = 3
     ) {
         viewModelScope.launch {
             _isLoading.value = true
