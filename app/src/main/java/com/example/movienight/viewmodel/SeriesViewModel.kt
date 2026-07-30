@@ -50,9 +50,9 @@ class SeriesViewModel : ViewModel() {
 
     fun fetchSeries(
         pagesToSearch: Int = 5,
-        k: Float = 12f,
-        minWeightedScore: Float = 6.6f,
-        minVoteCount: Int = 8,
+        k: Float = 15f,
+        minWeightedScore: Float = 7f,
+        minVoteCount: Int = 15,
         maxAttempts: Int = 2
     ) {
         viewModelScope.launch {

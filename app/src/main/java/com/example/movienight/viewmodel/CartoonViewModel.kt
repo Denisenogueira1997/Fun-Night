@@ -32,9 +32,9 @@ class CartoonViewModel : ViewModel() {
 
     fun fetchCartoon(
         pagesToSearch: Int = 5,
-        k: Float = 8f,
-        minWeightedScore: Float = 6.5f,
-        minVoteCount: Int = 5,
+        k: Float = 15f,
+        minWeightedScore: Float = 7f,
+        minVoteCount: Int = 15,
         maxAttempts: Int = 2
     ) {
         viewModelScope.launch {

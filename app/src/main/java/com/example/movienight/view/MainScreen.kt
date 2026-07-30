@@ -166,7 +166,7 @@ fun MainScreen(
                         containerColor = MaterialTheme.colorScheme.secondary
                     )
                 ) {
-                    Text("🎌 Sortear Desenho", fontSize = 16.sp)
+                    Text(" 🎞️ Sortear Desenho", fontSize = 16.sp)
                 }
 
                 Spacer(modifier = Modifier.height(20.dp))

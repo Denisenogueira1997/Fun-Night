@@ -32,9 +32,9 @@ class AnimeViewModel : ViewModel() {
 
     fun fetchAnime(
         pagesToSearch: Int = 5,
-        k: Float = 8f,
-        minWeightedScore: Float = 6.5f,
-        minVoteCount: Int = 5,
+        k: Float = 15f,
+        minWeightedScore: Float = 7f,
+        minVoteCount: Int = 15,
         maxAttempts: Int = 2
     ) {
         viewModelScope.launch {
@@ -65,9 +65,10 @@ class AnimeViewModel : ViewModel() {
                         val filtered = response.results.filter { s ->
                             val weightedScore =
                                 (s.voteAverage * s.voteCount + 7f * k) / (s.voteCount + k)
-                            weightedScore >= minWeightedScore && s.voteCount >= minVoteCount && (s.original_language == "ja" || s.genre_ids?.contains(
-                                16
-                            ) == true) && isTitleLatin(s.name)
+                            weightedScore >= minWeightedScore && s.voteCount >= minVoteCount
+                                    && (s.original_language == "ja"
+                                    && s.genre_ids?.contains(16) == true)
+                                    && isTitleLatin(s.name)
                         }
                         allResults.addAll(filtered)
                     }

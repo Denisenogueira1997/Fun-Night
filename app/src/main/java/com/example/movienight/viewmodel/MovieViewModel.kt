@@ -51,9 +51,9 @@ class MovieViewModel : ViewModel() {
 
     fun fetchMovies(
         pagesToSearch: Int = 5,
-        k: Float = 15f,
-        minWeightedScore: Float = 6.7f,
-        minVoteCount: Int = 20,
+        k: Float = 20f,
+        minWeightedScore: Float = 7f,
+        minVoteCount: Int = 30,
         maxAttempts: Int = 2
     ) {
         viewModelScope.launch {
@@ -131,8 +131,9 @@ class MovieViewModel : ViewModel() {
     fun fetchMoviesWithSelectedStreaming(
         selectedProviderIds: List<Int> = listOf(49, 118, 119, 531),
         pagesToSearch: Int = 5,
-        k: Float = 30f,
+        k: Float = 20f,
         minWeightedScore: Float = 7f,
+        minVoteCount: Int = 30,
         maxAttempts: Int = 2
     ) {
         viewModelScope.launch {
@@ -155,7 +156,7 @@ class MovieViewModel : ViewModel() {
                                 apiKey = apiKey,
                                 language = "pt-BR",
                                 page = page,
-                                voteCount = 1,
+                                voteCount = minVoteCount ,
                                 minVote = 0f,
                                 sortBy = "popularity.desc",
                                 withoutGenres = "27",
@@ -168,7 +169,7 @@ class MovieViewModel : ViewModel() {
                         res.results.filter { movie ->
                             val weightedScore =
                                 (movie.voteAverage * movie.voteCount + 7f * k) / (movie.voteCount + k)
-                            weightedScore >= minWeightedScore && isTitleLatin(movie.title)
+                            weightedScore >= minWeightedScore && movie.voteCount >= minVoteCount && isTitleLatin(movie.title)
                         }
                     }.shuffled()
                     val candidates = allResults.take(20)
