@@ -50,25 +50,41 @@ class CartoonViewModel : ViewModel() {
                 attempt++
 
                 try {
-                    val pages = (1..500).shuffled().take(pagesToSearch)
+                    val firstResponse = RetrofitInstance.api.discoverSeries(
+                        apiKey = apiKey,
+                        language = "pt-BR",
+                        sortBy = "popularity.desc",
+                        page = 1,
+                        voteCount = minVoteCount,
+                        minVote = 6f,
+                        withoutGenres = null
+                    )
+
+                    val totalPages = firstResponse.totalPages.coerceAtMost(500)
+
+                    val pages = (1..totalPages)
+                        .shuffled()
+                        .take(pagesToSearch)
                     val allResults = mutableListOf<Series>()
 
                     for (page in pages) {
                         val response = RetrofitInstance.api.discoverSeries(
                             apiKey = apiKey,
+                            sortBy = "popularity.desc",
                             language = "pt-BR",
                             page = page,
                             voteCount = minVoteCount,
-                            minVote = 0f,
+                            minVote = 6f,
                             withoutGenres = "27"
                         )
                         val filtered = response.results.filter { s ->
                             val weightedScore =
                                 (s.voteAverage * s.voteCount + 7f * k) / (s.voteCount + k)
                             weightedScore >= minWeightedScore &&
-                                    s.voteCount >= minVoteCount &&
-                                    s.original_language != "ja" &&
-                                    s.genre_ids?.contains(16) == true &&
+                                    s.voteCount >= minVoteCount
+                                    && (s.original_language != "ja"
+                                    && s.originCountry?.contains("JP") != true)
+                                    && s.genre_ids?.contains(16) == true &&
                                     isTitleLatin(s.name)
                         }
                         allResults.addAll(filtered)
@@ -97,6 +113,7 @@ class CartoonViewModel : ViewModel() {
                             voteCount = details.voteCount,
                             first_air_date = details.firstAirDate,
                             original_language = details.originalLanguage,
+                            originCountry = details.originCountry,
                             overview = details.overview,
                             genre_ids = details.genres?.map { it.id } ?: emptyList(),
                             numberOfSeasons = details.numberOfSeasons)

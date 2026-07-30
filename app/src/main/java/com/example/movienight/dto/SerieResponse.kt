@@ -3,7 +3,10 @@ package com.example.movienight.dto
 import com.google.gson.annotations.SerializedName
 
 data class SeriesResponse(
-    val results: List<Series>
+    val results: List<Series>,
+
+    @SerializedName("total_pages")
+    val totalPages: Int
 )
 
 data class Series(
@@ -14,6 +17,7 @@ data class Series(
     @SerializedName("vote_count") val voteCount: Int,
     val first_air_date: String?,
     @SerializedName("original_language") val original_language: String?,
+    @SerializedName("origin_country") val originCountry: List<String>?,
     val overview: String?,
     val genre_ids: List<Int>?,
     @SerializedName("number_of_seasons") val numberOfSeasons: Int? = null
@@ -28,12 +32,18 @@ data class SeriesDetailsResponse(
     @SerializedName("vote_count") val voteCount: Int,
     @SerializedName("first_air_date") val firstAirDate: String?,
     @SerializedName("original_language") val originalLanguage: String?,
+    @SerializedName("origin_country")
+    val originCountry: List<String>?,
     val genres: List<Genre>?,
-    @SerializedName("number_of_seasons") val numberOfSeasons: Int?
+    @SerializedName("number_of_seasons") val numberOfSeasons: Int?,
+
+
+
 )
 
 
 data class SeriesContentRatingResponse(val results: List<SeriesRating>)
+
 
 data class SeriesRating(
     val iso_3166_1: String,

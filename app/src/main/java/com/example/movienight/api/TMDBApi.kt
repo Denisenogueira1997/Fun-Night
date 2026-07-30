@@ -21,7 +21,7 @@ interface TMDBApi {
     suspend fun discoverMovies(
         @Query("api_key") apiKey: String,
         @Query("language") language: String = "pt-BR",
-        @Query("sort_by") sortBy: String = "vote_average.desc",
+        @Query("sort_by") sortBy: String,
         @Query("vote_count.gte") voteCount: Int,
         @Query("vote_average.gte") minVote: Float,
         @Query("page") page: Int,
@@ -52,7 +52,7 @@ interface TMDBApi {
     suspend fun discoverSeries(
         @Query("api_key") apiKey: String,
         @Query("language") language: String = "pt-BR",
-        @Query("sort_by") sortBy: String = "vote_average.desc",
+        @Query("sort_by") sortBy: String,
         @Query("vote_count.gte") voteCount: Int,
         @Query("vote_average.gte") minVote: Float,
         @Query("page") page: Int,

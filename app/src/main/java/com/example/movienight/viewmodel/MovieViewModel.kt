@@ -69,15 +69,37 @@ class MovieViewModel : ViewModel() {
                 attempt++
 
                 try {
-                    val pages = (1..500).shuffled().take(pagesToSearch)
+                    val firstResponse =
+                        RetrofitInstance.api.discoverMovies(
+                            apiKey = apiKey,
+                            sortBy = "popularity.desc",
+                            language = "pt-BR",
+                            page = 1,
+                            voteCount = minVoteCount,
+                            minVote = 6f,
+                            withoutGenres = null,
+                            minReleaseDate = "1985-01-01"
+                        )
+
+
+                    val totalPages =
+                        firstResponse.totalPages
+                            .coerceAtMost(500)
+
+
+                    val pages =
+                        (1..totalPages)
+                            .shuffled()
+                            .take(pagesToSearch)
                     val responses = pages.map { page ->
                         async {
                             RetrofitInstance.api.discoverMovies(
                                 apiKey = apiKey,
+                                sortBy = "popularity.desc",
                                 language = "pt-BR",
                                 page = page,
                                 voteCount = minVoteCount,
-                                minVote = 0f,
+                                minVote = 6f,
                                 withoutGenres = null,
                                 minReleaseDate = "1985-01-01"
                             )
@@ -149,7 +171,28 @@ class MovieViewModel : ViewModel() {
                 attempt++
 
                 try {
-                    val pages = (1..500).shuffled().take(pagesToSearch)
+                    val firstResponse =
+                        RetrofitInstance.api.discoverMovies(
+                            apiKey = apiKey,
+                            language = "pt-BR",
+                            page = 1,
+                            voteCount = minVoteCount,
+                            minVote = 6f,
+                            sortBy = "popularity.desc",
+                            withoutGenres = "27",
+                            minReleaseDate = "1950-01-01"
+                        )
+
+
+                    val totalPages =
+                        firstResponse.totalPages
+                            .coerceAtMost(500)
+
+
+                    val pages =
+                        (1..totalPages)
+                            .shuffled()
+                            .take(pagesToSearch)
                     val responses = pages.map { page ->
                         async {
                             RetrofitInstance.api.discoverMovies(
@@ -330,7 +373,7 @@ class MovieViewModel : ViewModel() {
     }
 
 
-    private fun fetchWatchProviders(movieId: Int) {
+    private suspend fun fetchWatchProviders(movieId: Int) {
         viewModelScope.launch {
             try {
                 val response = RetrofitInstance.api.getWatchProviders(movieId, apiKey)

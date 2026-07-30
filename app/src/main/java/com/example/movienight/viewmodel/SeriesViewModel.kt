@@ -49,11 +49,11 @@ class SeriesViewModel : ViewModel() {
     }
 
     fun fetchSeries(
-        pagesToSearch: Int = 5,
+        pagesToSearch: Int = 10,
         k: Float = 15f,
         minWeightedScore: Float = 7f,
         minVoteCount: Int = 15,
-        maxAttempts: Int = 2
+        maxAttempts: Int = 3
     ) {
         viewModelScope.launch {
             _selectedSeries.value = null
@@ -68,15 +68,30 @@ class SeriesViewModel : ViewModel() {
                 attempt++
 
                 try {
-                    val pages = (1..500).shuffled().take(pagesToSearch)
+                    val firstResponse = RetrofitInstance.api.discoverSeries(
+                        apiKey = apiKey,
+                        language = "pt-BR",
+                        sortBy = "popularity.desc",
+                        page = 1,
+                        voteCount = minVoteCount,
+                        minVote = 6f,
+                        withoutGenres = null
+                    )
+
+                    val totalPages = firstResponse.totalPages.coerceAtMost(500)
+
+                    val pages = (1..totalPages)
+                        .shuffled()
+                        .take(pagesToSearch)
 
                     for (page in pages) {
                         val response = RetrofitInstance.api.discoverSeries(
                             apiKey = apiKey,
+                            sortBy = "popularity.desc",
                             language = "pt-BR",
                             page = page,
                             voteCount = minVoteCount,
-                            minVote = 0f,
+                            minVote = 6f,
                             withoutGenres = null
                         )
 
@@ -84,7 +99,7 @@ class SeriesViewModel : ViewModel() {
                             .shuffled()
                             .firstOrNull { s ->
                                 val weightedScore =
-                                    (s.voteAverage * s.voteCount + 7f * k) / (s.voteCount + k)
+                                    (s.voteAverage * s.voteCount + 7  * k) / (s.voteCount + k)
 
                                 weightedScore >= minWeightedScore &&
                                         isTitleLatin(s.name) &&
@@ -119,6 +134,7 @@ class SeriesViewModel : ViewModel() {
                             voteCount = details.voteCount,
                             first_air_date = details.firstAirDate,
                             original_language = details.originalLanguage,
+                            originCountry = details.originCountry,
                             overview = details.overview,
                             genre_ids = details.genres?.map { it.id } ?: emptyList(),
                             numberOfSeasons = details.numberOfSeasons
